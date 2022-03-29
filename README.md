@@ -1,3 +1,8 @@
+# 빌드방법
+    1. npm install -g vsce(안될 시 npm install -g npm@8.5.5)
+    2. vsce package // 로컬 빌드
+    3. vsce publish // 아예 마켓까지 올려버리는 명령어
+
 # Dart Data Class Generator
 
 [![GitHub Stars](https://img.shields.io/github/stars/bxqm/dart_data_class_generator.svg?logo=github)](https://github.com/bxqm/dart_data_class_generator)
