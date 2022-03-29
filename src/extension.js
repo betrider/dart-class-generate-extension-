@@ -764,7 +764,7 @@ class DataClassGenerator {
                     if (readSetting('copyWith.enabled') && this.isPartSelected('copyWith'))
                         this.insertCopyWith(clazz);
                     if (readSetting('toMap.enabled') && this.isPartSelected('serialization'))
-                    this.insertToMap(clazz, readSetting('toMap.hideNull'));
+                    this.insertToMap(clazz);
                     if (readSetting('fromMap.enabled') && this.isPartSelected('serialization'))
                         this.insertFromMap(clazz);
                     if (readSetting('toJson.enabled') && this.isPartSelected('serialization'))
@@ -1065,20 +1065,20 @@ class DataClassGenerator {
     /**
      * @param {DartClass} clazz
      */
-     insertToMap(clazz, hideNull) {
+     insertToMap(clazz) {
         let props = clazz.properties;
         /**
          * @param {ClassField} prop
          */
-        function customTypeMapping(prop, name = null, endFlag = ',\n', nullSafeSign = '?') {
+        function customTypeMapping(prop, name = null, endFlag = ',\n') {
             prop = prop.isCollection ? prop.collectionType : prop;
             name = name == null ? prop.name : name;
 
-            const nullSafe = prop.isNullable ? nullSafeSign : '';
+            const nullSafe = prop.isNullable ? '?' : '';
 
             switch (prop.type) {
                 case 'DateTime':
-                    return `${name}${nullSafe}.millisecondsSinceEpoch${endFlag}`;
+                    return `${name}${nullSafe}.toIso8601String()${endFlag}`;
                 case 'Color':
                     return `${name}${nullSafe}.value${endFlag}`;
                 case 'IconData':
@@ -1088,73 +1088,30 @@ class DataClassGenerator {
             }
         }
 
-        function withNullValue(){
-            let body = '';
-            for (let p of props) {
-                body += `    '${p.key}': `;
-    
-                const nullSafe = p.isNullable ? '?' : '';
-    
-                let nextLine;
-                if (p.isEnum) {
-                    nextLine= `${p.name}${nullSafe}.index`;
-                } else if (p.isCollection) {
-                    if (p.isMap || p.collectionType.isPrimitive) {
-                        const mapFlag = p.isSet ? `${nullSafe}.toList()` : '';
-                        nextLine= `${p.name}${mapFlag}`;
-                    } else {
-                        nextLine= `${p.name}?.map((x) => ${customTypeMapping(p, 'x', '')})?.toList()`
-                    }
-                } else {
-                    nextLine= customTypeMapping(p, null, '');
+        let method = `Map<String, dynamic> toMap() {\n`;
+        method += '  return <String, dynamic>{\n';
+        for (let p of props) {
+            method += `    '${p.key}': `;
+
+            if (p.isEnum) {
+                if(p.isCollection){
+                    method += `${p.name}.map((x) => EnumToString.convertToString(x)).toList(),\n`
+                }else{
+                    method += `EnumToString.convertToString(${p.name}),\n`;
                 }
-    
-                nextLine = `${nextLine},\n`;
-    
-                body += nextLine;
-    
-                // if (p.name == props[props.length - 1].name) method += '  };\n';
+            } else if (p.isCollection) {
+                if (p.isMap || p.collectionType.isPrimitive) {
+                    const mapFlag = p.isSet ? (p.isNullable ? '?' : '') + '.toList()' : '';
+                    method += `${p.name}${mapFlag},\n`;
+                } else {
+                    method += `${p.name}.map((x) => ${customTypeMapping(p, 'x', '')}).toList(),\n`
+                }
+            } else {
+                method += customTypeMapping(p);
             }
-            return `  return {\n${body}  };`;
+            if (p.name == props[props.length - 1].name) method += '  };\n';
         }
-
-        function withoutNullValue(){
-            let body = '  final result = <String, dynamic>{};\n\n';
-
-            for (let p of props) {
-    
-                const nullSafe = p.isNullable ? '!' : '';
-    
-                let nextLine = '';
-                if (p.isEnum) {
-                    nextLine= `${p.name}${nullSafe}.index`;
-                } else if (p.isCollection) {
-                    if (p.isMap || p.collectionType.isPrimitive) {
-                        const mapFlag = p.isSet ? `${nullSafe}.toList()` : '';
-                        nextLine= `${p.name}${mapFlag}`;
-                    } else {
-                        nextLine= `${p.name}${nullSafe}.map((x) => ${customTypeMapping(p, 'x', '')}).toList()`
-                    }
-                } else {
-                    nextLine= customTypeMapping(p, null, '', '!');
-                }
-
-                if (p.isNullable) {
-                    nextLine = `  if(${p.name} != null){\n    result.addAll({'${p.key}': ${nextLine}});\n  }\n`;
-                } else {
-                    nextLine = `  result.addAll({'${p.key}': ${nextLine}});\n`;
-                    
-                }
-
-                body += nextLine;
-    
-            }
-
-            return `${body}\n  return result;`;
-        }
-
-        const body = hideNull == true ?  withoutNullValue() : withNullValue();
-        let method = `Map<String, dynamic> toMap() {\n${body}\n}`;
+        method += '}';
 
         this.appendOrReplace('toMap', method, 'Map<String, dynamic> toMap()', clazz);
     }
@@ -1175,7 +1132,7 @@ class DataClassGenerator {
 
             switch (prop.type) {
                 case 'DateTime':
-                    return `DateTime.fromMillisecondsSinceEpoch(${value})`;
+                    return `dateParse(${value})!`;
                 case 'Color':
                     return `Color(${value})`;
                 case 'IconData':
@@ -1199,7 +1156,11 @@ class DataClassGenerator {
 
             // serialization
             if (p.isEnum) {
-                method += `${p.rawType}.values[${value} ?? 0]`;
+                if(p.isCollection){
+                    method += `${p.type}.from(${value}?.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
+                }else{
+                    method += `EnumToString.fromString(${p.type}.values, ${value})!`;
+                }
             } else if (p.isCollection) {
                 const defaultValue = withDefaultValues && !p.isNullable ? ` ?? const ${p.isList ? '[]' : '{}'}` : '';
 
