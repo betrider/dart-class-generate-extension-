@@ -3,6 +3,9 @@
     2. vsce package // 로컬 빌드
     3. vsce publish // 아예 마켓까지 올려버리는 명령어
 
+# enum 데이터인 경우
+    //enum 주석 추가
+
 # Dart Data Class Generator
 
 [![GitHub Stars](https://img.shields.io/github/stars/bxqm/dart_data_class_generator.svg?logo=github)](https://github.com/bxqm/dart_data_class_generator)

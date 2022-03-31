@@ -653,6 +653,11 @@ class ClassField {
         return t == 'String' || t == 'num' || t == 'dynamic' || t == 'bool' || this.isDouble || this.isInt || this.isMap;
     }
 
+    get isDateTime() {
+        let t = this.collectionType.type;
+        return t == 'DateTime';
+    }
+
     get isPrivate() {
         return this.name.startsWith('_');
     }
@@ -1095,14 +1100,15 @@ class DataClassGenerator {
 
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.name}.map((x) => EnumToString.convertToString(x)).toList(),\n`
+                    method += `${p.name}.map((x) => eToS(x)).toList(),\n`
                 }else{
-                    method += `EnumToString.convertToString(${p.name}),\n`;
+                    method += `eToS(${p.name}),\n`;
                 }
             } else if (p.isCollection) {
                 if (p.isMap || p.collectionType.isPrimitive) {
-                    const mapFlag = p.isSet ? (p.isNullable ? '?' : '') + '.toList()' : '';
-                    method += `${p.name}${mapFlag},\n`;
+                    method += `listParse(${p.name}, (e) => e),\n`;
+                }else if (p.collectionType.isDateTime) {
+                    method += `listParse(${p.name}, (e) => e.toIso8601String()),\n`;
                 } else {
                     method += `${p.name}.map((x) => ${customTypeMapping(p, 'x', '')}).toList(),\n`
                 }
@@ -1157,9 +1163,9 @@ class DataClassGenerator {
             // serialization
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.type}.from(${value}?.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
+                    method += `${p.type}.from(${value}?.map((x) => enumParse(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
                 }else{
-                    method += `EnumToString.fromString(${p.type}.values, ${value})!`;
+                    method += `enumParse(${p.type}.values, ${value})!`;
                 }
             } else if (p.isCollection) {
                 const defaultValue = withDefaultValues && !p.isNullable ? ` ?? const ${p.isList ? '[]' : '{}'}` : '';
