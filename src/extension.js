@@ -1100,9 +1100,9 @@ class DataClassGenerator {
 
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.name}.map((x) => eToS(x)).toList(),\n`
+                    method += `${p.name}.map((x) => EnumToString.convertToString(x)).toList(),\n`
                 }else{
-                    method += `eToS(${p.name}),\n`;
+                    method += `EnumToString.convertToString(${p.name}),\n`;
                 }
             } else if (p.isCollection) {
                 if (p.isMap || p.collectionType.isPrimitive) {
@@ -1138,7 +1138,7 @@ class DataClassGenerator {
 
             switch (prop.type) {
                 case 'DateTime':
-                    return `dateParse(${value})!`;
+                    return `DateTime.parse(${value}).toLocal()`;
                 case 'Color':
                     return `Color(${value})`;
                 case 'IconData':
@@ -1163,9 +1163,9 @@ class DataClassGenerator {
             // serialization
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.type}.from(${value}?.map((x) => enumParse(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
+                    method += `${p.type}.from(${value}?.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
                 }else{
-                    method += `enumParse(${p.type}.values, ${value})!`;
+                    method += `EnumToString.fromString(${p.type}.values, ${value})!`;
                 }
             } else if (p.isCollection) {
                 const defaultValue = withDefaultValues && !p.isNullable ? ` ?? const ${p.isList ? '[]' : '{}'}` : '';

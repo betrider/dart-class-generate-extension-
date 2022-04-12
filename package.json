@@ -3,7 +3,7 @@
 	"displayName": "DU Data Class Generator",
 	"description": "Create DU dart data classes easily, fast and without writing boilerplate or running code generation.",
 	"publisher": "betrider",
-	"version": "1.0.0",
+	"version": "1.0.2",
 	"engines": {
 		"vscode": "^1.37.0"
 	},
