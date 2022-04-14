@@ -1163,7 +1163,7 @@ class DataClassGenerator {
             // serialization
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.type}.from(${value}?.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
+                    method += `${p.type}.from(${value}.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
                 }else{
                     method += `EnumToString.fromString(${p.type}.values, ${value})!`;
                 }
