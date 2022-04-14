@@ -1106,9 +1106,9 @@ class DataClassGenerator {
                 }
             } else if (p.isCollection) {
                 if (p.isMap || p.collectionType.isPrimitive) {
-                    method += `listParse(${p.name}, (e) => e),\n`;
+                    method += `${p.name},\n`;
                 }else if (p.collectionType.isDateTime) {
-                    method += `listParse(${p.name}, (e) => e.toIso8601String()),\n`;
+                    method += `${p.name}.map((x) => x.toIso8601String()).toList(),\n`;
                 } else {
                     method += `${p.name}.map((x) => ${customTypeMapping(p, 'x', '')}).toList(),\n`
                 }
@@ -1174,7 +1174,7 @@ class DataClassGenerator {
                 if (p.isPrimitive) {
                     method += `${value}${defaultValue})`;
                 } else {
-                    method += `${value}?.map((x) => ${customTypeMapping(p, 'x')})${defaultValue})`;
+                    method += `${value}.map((x) => ${customTypeMapping(p, 'x')})${defaultValue})`;
                 }
             } else if (p.isPrimitive) {
                 const defaultValue = !p.isNullable ? ` ?? ${p.defValue}` : '';
