@@ -769,7 +769,7 @@ class DataClassGenerator {
                     if (readSetting('copyWith.enabled') && this.isPartSelected('copyWith'))
                         this.insertCopyWith(clazz);
                     if (readSetting('toMap.enabled') && this.isPartSelected('serialization'))
-                    this.insertToMap(clazz);
+                        this.insertToMap(clazz);
                     if (readSetting('fromMap.enabled') && this.isPartSelected('serialization'))
                         this.insertFromMap(clazz);
                     if (readSetting('toJson.enabled') && this.isPartSelected('serialization'))
@@ -1075,7 +1075,7 @@ class DataClassGenerator {
         /**
          * @param {ClassField} prop
          */
-        function customTypeMapping(prop, name = null, endFlag = ',\n') {
+        function customTypeMapping(prop, name = null, endFlag = ',\n', isChild = false) {
             prop = prop.isCollection ? prop.collectionType : prop;
             name = name == null ? prop.name : name;
 
@@ -1089,7 +1089,15 @@ class DataClassGenerator {
                 case 'IconData':
                     return `${name}${nullSafe}.codePoint${endFlag}`
                 default:
-                    return `${name}${!prop.isPrimitive ? `${nullSafe}.toMap()` : ''}${endFlag}`;
+                    if(prop.isPrimitive){
+                        return `${name}${endFlag}`;
+                    }else{
+                        if(isChild){
+                            return `${name}.toMap()${endFlag}`;
+                        }else{
+                            return `${name}${nullSafe}.toMap()${endFlag}`;
+                        }
+                    }
             }
         }
 
@@ -1097,10 +1105,12 @@ class DataClassGenerator {
         method += '  return <String, dynamic>{\n';
         for (let p of props) {
             method += `    '${p.key}': `;
+            
+            var nullSafe = p.isNullable ? '?' : '';
 
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.name}.map((x) => EnumToString.convertToString(x)).toList(),\n`
+                    method += `${p.name}${nullSafe}.map((x) => EnumToString.convertToString(x)).toList(),\n`
                 }else{
                     method += `EnumToString.convertToString(${p.name}),\n`;
                 }
@@ -1108,9 +1118,9 @@ class DataClassGenerator {
                 if (p.isMap || p.collectionType.isPrimitive) {
                     method += `${p.name},\n`;
                 }else if (p.collectionType.isDateTime) {
-                    method += `${p.name}.map((x) => x.toIso8601String()).toList(),\n`;
+                    method += `${p.name}${nullSafe}.map((x) => x.toIso8601String()).toList(),\n`;
                 } else {
-                    method += `${p.name}.map((x) => ${customTypeMapping(p, 'x', '')}).toList(),\n`
+                    method += `${p.name}${nullSafe}.map((x) => ${customTypeMapping(p, 'x', '', true)}).toList(),\n`
                 }
             } else {
                 method += customTypeMapping(p);
@@ -1163,7 +1173,7 @@ class DataClassGenerator {
             // serialization
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.type}.from(${value}.map((x) => EnumToString.fromString(${p.rawType.replace('List<','').replace('>','')}.values, x)))`;
+                    method += `${p.type}.from(${value}.map((x) => EnumToString.fromString(${p.type.replace('List<','').replace('>','')}.values, x)))`;
                 }else{
                     method += `EnumToString.fromString(${p.type}.values, ${value})!`;
                 }
