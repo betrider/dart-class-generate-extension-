@@ -1112,7 +1112,11 @@ class DataClassGenerator {
                 if(p.isCollection){
                     method += `${p.name}${nullSafe}.map((x) => EnumToString.convertToString(x)).toList(),\n`
                 }else{
-                    method += `EnumToString.convertToString(${p.name}),\n`;
+                    if(p.isNullable){
+                        method += `${p.name} != null ? EnumToString.convertToString(${p.name}) : null,\n`;
+                    }else{
+                        method += `EnumToString.convertToString(${p.name}),\n`;
+                    }
                 }
             } else if (p.isCollection) {
                 if (p.isMap || p.collectionType.isPrimitive) {
