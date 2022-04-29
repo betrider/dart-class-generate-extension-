@@ -1168,7 +1168,7 @@ class DataClassGenerator {
             method += `    ${clazz.hasNamedConstructor ? `${p.name}: ` : ''}`;
 
             const value = `map['${p.key}']`;
-            const addNullCheck = !p.isPrimitive && p.isNullable;
+            const addNullCheck = p.isNullable;
 
             if (addNullCheck) {
                 method += `${value} != null ? `;
@@ -1182,17 +1182,14 @@ class DataClassGenerator {
                     method += `EnumToString.fromString(${p.type}.values, ${value})!`;
                 }
             } else if (p.isCollection) {
-                const defaultValue = withDefaultValues && !p.isNullable ? ` ?? const ${p.isList ? '[]' : '{}'}` : '';
-
                 method += `${p.type}.from(`;
                 if (p.isPrimitive) {
-                    method += `${value}${defaultValue})`;
+                    method += `${value})`;
                 } else {
-                    method += `${value}.map((x) => ${customTypeMapping(p, 'x')})${defaultValue})`;
+                    method += `${value}.map((x) => ${customTypeMapping(p, 'x')}))`;
                 }
             } else if (p.isPrimitive) {
-                const defaultValue = !p.isNullable ? ` ?? ${p.defValue}` : '';
-                method += `${value}${p.isDouble ? '?.toDouble()' : p.isInt ? '?.toInt()' : ''}${defaultValue}`;
+                method += `${value}${p.isDouble ? '?.toDouble()' : p.isInt ? '?.toInt()' : ''}`;
             } else {
                 method += customTypeMapping(p);
             }
