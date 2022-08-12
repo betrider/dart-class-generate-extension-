@@ -1,3 +1,6 @@
+# 참고사항
+    Dart Version 2.15 이상부터 사용권장(enum)
+
 # 빌드방법
     1. npm install -g vsce(안될 시 npm install -g npm@8.5.5)
     2. vsce package // 로컬 빌드

@@ -653,6 +653,11 @@ class ClassField {
         return t == 'String' || t == 'num' || t == 'dynamic' || t == 'bool' || this.isDouble || this.isInt || this.isMap;
     }
 
+    get isNotCollection() {
+        let t = this.collectionType.type;
+        return t == 'String' || t == 'num' || t == 'dynamic' || t == 'bool' || this.isDouble || this.isInt;
+    }
+
     get isDateTime() {
         let t = this.collectionType.type;
         return t == 'DateTime';
@@ -1110,12 +1115,12 @@ class DataClassGenerator {
 
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.name}${nullSafe}.map((x) => EnumToString.convertToString(x)).toList(),\n`
+                    method += `${p.name}${nullSafe}.map((x) => x.name).toList(),\n`
                 }else{
                     if(p.isNullable){
-                        method += `${p.name} != null ? EnumToString.convertToString(${p.name}) : null,\n`;
+                        method += `${p.name}?.name,\n`;
                     }else{
-                        method += `EnumToString.convertToString(${p.name}),\n`;
+                        method += `${p.name}.name,\n`;
                     }
                 }
             } else if (p.isCollection) {
@@ -1170,16 +1175,16 @@ class DataClassGenerator {
             const value = `map['${p.key}']`;
             const addNullCheck = p.isNullable;
 
-            if (addNullCheck) {
+            if (addNullCheck && !p.isNotCollection) {
                 method += `${value} != null ? `;
             }
 
             // serialization
             if (p.isEnum) {
                 if(p.isCollection){
-                    method += `${p.type}.from(${value}.map((x) => EnumToString.fromString(${p.type.replace('List<','').replace('>','')}.values, x)))`;
+                    method += `${p.type}.from(${value}.map((x) => ${p.type.replace('List<','').replace('>','')}.values.byName(x)))`;
                 }else{
-                    method += `EnumToString.fromString(${p.type}.values, ${value})!`;
+                    method += `${p.type.replace('List<','').replace('>','')}.values.byName(${value})`;
                 }
             } else if (p.isCollection) {
                 method += `${p.type}.from(`;
@@ -1194,7 +1199,7 @@ class DataClassGenerator {
                 method += customTypeMapping(p);
             }
 
-            if (addNullCheck) {
+            if (addNullCheck && !p.isNotCollection) {
                 method += ` : null`;
             }
 
