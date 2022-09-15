@@ -1088,7 +1088,7 @@ class DataClassGenerator {
 
             switch (prop.type) {
                 case 'DateTime':
-                    return `${name}${nullSafe}.toIso8601String()${endFlag}`;
+                    return `${name}${nullSafe}.toUtc().toIso8601String()${endFlag}`;
                 case 'Color':
                     return `${name}${nullSafe}.value${endFlag}`;
                 case 'IconData':
@@ -1127,7 +1127,7 @@ class DataClassGenerator {
                 if (p.isMap || p.collectionType.isPrimitive) {
                     method += `${p.name},\n`;
                 }else if (p.collectionType.isDateTime) {
-                    method += `${p.name}${nullSafe}.map((x) => x.toIso8601String()).toList(),\n`;
+                    method += `${p.name}${nullSafe}.map((x) => x.toUtc().toIso8601String()).toList(),\n`;
                 } else {
                     method += `${p.name}${nullSafe}.map((x) => ${customTypeMapping(p, 'x', '', true)}).toList(),\n`
                 }
