@@ -1177,7 +1177,7 @@ class DataClassGenerator {
             const value = `map["${p.key}"]`;
             const addNullCheck = p.isNullable;
 
-            if (addNullCheck && !p.isNotCollection) {
+            if (addNullCheck && p.isCollection) {
                 method += `${value} != null ? `;
             }
 
