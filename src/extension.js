@@ -509,9 +509,9 @@ class Imports {
         const dartImports = [];
         const packageImports = [];
         const packageLocalImports = [];
-        const relativeImports = [];
         const partStatements = [];
         const exports = [];
+        const relativeImports = [];
 
         for (let imp of this.values) {
             if (imp.startsWith("export")) {
@@ -549,11 +549,16 @@ class Imports {
         addImports(dartImports);
         addImports(packageImports);
         addImports(packageLocalImports);
-        addImports(relativeImports);
         addImports(exports);
         addImports(partStatements);
+        addImports(relativeImports);
 
-        return removeEnd(imps, "\n");
+        if (relativeImports.length == 0) {
+            return removeEnd(imps, "\n");
+        } else {
+            return removeEnd(imps, "\n\n");
+        }
+
     }
 
     /**
@@ -590,6 +595,18 @@ class Imports {
         const formattedImport = !imp.startsWith("import")
             ? "import '" + imp + "';"
             : imp;
+
+        if (!this.includes(formattedImport) && !this.hastAtLeastOneImport(validOverrides)) {
+            this.values.push(formattedImport);
+        }
+    }
+
+    /**
+     * @param {string} imp
+     * @param {string[]} validOverrides
+     */
+    requiresImport2(imp, validOverrides = []) {
+        const formattedImport = imp;
 
         if (!this.includes(formattedImport) && !this.hastAtLeastOneImport(validOverrides)) {
             this.values.push(formattedImport);
@@ -753,6 +770,14 @@ class DataClassGenerator {
      */
     requiresImport(imp, validOverrides = []) {
         this.imports.requiresImport(imp, validOverrides);
+    }
+
+    /**
+     * @param {string} imp
+     * @param {string[]} validOverrides
+     */
+    requiresImport2(imp, validOverrides = []) {
+        this.imports.requiresImport2(imp, validOverrides);
     }
 
     /**
@@ -1234,6 +1259,8 @@ class DataClassGenerator {
      */
     insertToJson2(clazz) {
         this.requiresImport("package:json_annotation/json_annotation.dart");
+        this.requiresImport2(`part '${clazz.name.toLowerCase()}.g.dart';`);
+        this.requiresImport2("@JsonSerializable()");
 
         const method = `Map<String, dynamic> toJson() => _$${clazz.name}ToJson(this);`;
         this.appendOrReplace("toJson", method, "Map<String, dynamic> toJson()", clazz);
@@ -1254,7 +1281,9 @@ class DataClassGenerator {
      */
     insertFromJson2(clazz) {
         this.requiresImport("package:json_annotation/json_annotation.dart");
-
+        this.requiresImport2(`part '${clazz.name.toLowerCase()}.g.dart';`);
+        this.requiresImport2("@JsonSerializable()");
+        
         const method = `factory ${clazz.name}.fromJson(Map<String, dynamic> json) => _$${clazz.name}FromJson(json);`;
         this.appendOrReplace("fromJson", method, `factory ${clazz.name}.fromJson(Map<String, dynamic> json)`, clazz);
     }
