@@ -783,6 +783,10 @@ class DataClassGenerator {
                         this.insertToJson(clazz);
                     if (readSetting("fromJson.enabled") && this.isPartSelected("serialization"))
                         this.insertFromJson(clazz);
+                    if (readSetting("fromJson.enabled") && this.isPartSelected("serialization2"))
+                        this.insertFromJson2(clazz);
+                    if (readSetting("toJson.enabled") && this.isPartSelected("serialization2"))
+                        this.insertToJson2(clazz);
                 }
 
                 if (readSetting("toString.enabled") && this.isPartSelected("toString"))
@@ -1228,10 +1232,30 @@ class DataClassGenerator {
     /**
      * @param {DartClass} clazz
      */
+    insertToJson2(clazz) {
+        this.requiresImport("dart:convert");
+
+        const method = `Map<String, dynamic> toJson() => _$${clazz.name}ToJson(this);`;
+        this.appendOrReplace("toJson", method, "String toJson()", clazz);
+    }
+
+    /**
+     * @param {DartClass} clazz
+     */
     insertFromJson(clazz) {
         this.requiresImport("dart:convert");
 
         const method = `factory ${clazz.name}.fromJson(String source) => ${clazz.name}.fromMap(json.decode(source));`;
+        this.appendOrReplace("fromJson", method, `factory ${clazz.name}.fromJson(String source)`, clazz);
+    }
+
+    /**
+     * @param {DartClass} clazz
+     */
+    insertFromJson2(clazz) {
+        this.requiresImport("dart:convert");
+
+        const method = `factory ${clazz.name}.fromJson(Map<String, dynamic> json) => _$${clazz.name}FromJson(json);`;
         this.appendOrReplace("fromJson", method, `factory ${clazz.name}.fromJson(String source)`, clazz);
     }
 
@@ -2025,6 +2049,8 @@ class DataClassCodeActions {
                     codeActions.push(this.createCopyWithFix());
                 if (readSettings(["toMap.enabled", "fromMap.enabled", "toJson.enabled", "fromJson.enabled"]))
                     codeActions.push(this.createSerializationFix());
+                if (readSettings(["fromJson.enabled", "toJson.enabled"]))
+                    codeActions.push(this.createSerializationFix2());
             }
 
             if (readSetting("toString.enabled"))
@@ -2103,6 +2129,10 @@ class DataClassCodeActions {
 
     createSerializationFix() {
         return this.constructQuickFix("serialization", "Generate JSON serialization");
+    }
+
+    createSerializationFix2() {
+        return this.constructQuickFix("serialization2", "Generate JSON serialization with package");
     }
 
     createToStringFix() {
