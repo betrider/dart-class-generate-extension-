@@ -1233,10 +1233,10 @@ class DataClassGenerator {
      * @param {DartClass} clazz
      */
     insertToJson2(clazz) {
-        this.requiresImport("dart:convert");
+        this.requiresImport("package:json_annotation/json_annotation.dart");
 
         const method = `Map<String, dynamic> toJson() => _$${clazz.name}ToJson(this);`;
-        this.appendOrReplace("toJson", method, "String toJson()", clazz);
+        this.appendOrReplace("toJson", method, "Map<String, dynamic> toJson()", clazz);
     }
 
     /**
@@ -1253,10 +1253,10 @@ class DataClassGenerator {
      * @param {DartClass} clazz
      */
     insertFromJson2(clazz) {
-        this.requiresImport("dart:convert");
+        this.requiresImport("package:json_annotation/json_annotation.dart");
 
         const method = `factory ${clazz.name}.fromJson(Map<String, dynamic> json) => _$${clazz.name}FromJson(json);`;
-        this.appendOrReplace("fromJson", method, `factory ${clazz.name}.fromJson(String source)`, clazz);
+        this.appendOrReplace("fromJson", method, `factory ${clazz.name}.fromJson(Map<String, dynamic> json)`, clazz);
     }
 
     /**
