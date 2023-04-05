@@ -672,11 +672,6 @@ class ClassField {
         return t == "String" || t == "num" || t == "dynamic" || t == "bool" || this.isDouble || this.isInt || this.isMap;
     }
 
-    get isNotCollection() {
-        let t = this.collectionType.type;
-        return t == "String" || t == "num" || t == "dynamic" || t == "bool" || this.isDouble || this.isInt;
-    }
-
     get isDateTime() {
         let t = this.collectionType.type;
         return t == "DateTime";
@@ -1184,7 +1179,7 @@ class DataClassGenerator {
          */
         function customTypeMapping(prop, value = null) {
             prop = prop.isCollection ? prop.collectionType : prop;
-            value = value == null ? "map['" + prop.key + "']" : value;
+            value = value == null ? 'map["' + prop.key + '"]' : value;
 
             switch (prop.type) {
                 case "DateTime":
@@ -1206,8 +1201,12 @@ class DataClassGenerator {
             const value = `map["${p.key}"]`;
             const addNullCheck = p.isNullable;
 
-            if (addNullCheck && p.isCollection) {
-                method += `${value} != null ? `;
+            if (addNullCheck) {
+                if(p.isPrimitive && !p.isCollection){
+
+                }else{
+                    method += `${value} != null ? `;
+                }
             }
 
             // serialization
@@ -1230,8 +1229,12 @@ class DataClassGenerator {
                 method += customTypeMapping(p);
             }
 
-            if (addNullCheck && !p.isNotCollection) {
-                method += ` : null`;
+            if (addNullCheck) {
+                if(p.isPrimitive && !p.isCollection){
+
+                }else{
+                    method += ` : null`;
+                }
             }
 
             method += ",\n";
