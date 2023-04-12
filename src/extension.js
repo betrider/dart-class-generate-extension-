@@ -1262,7 +1262,7 @@ class DataClassGenerator {
      */
     insertToJson2(clazz) {
         this.requiresImport("package:json_annotation/json_annotation.dart");
-        this.requiresImport2(`part '${clazz.name.toLowerCase()}.g.dart';`);
+        this.requiresImport2(`part '${clazz.name.replace(/\.?([A-Z])/g, function (x,y){return "_" + y.toLowerCase()}).replace(/^_/, "")}.g.dart';`);
         this.requiresImport2("@JsonSerializable()");
 
         const method = `Map<String, dynamic> toJson() => _$${clazz.name}ToJson(this);`;
@@ -1284,7 +1284,7 @@ class DataClassGenerator {
      */
     insertFromJson2(clazz) {
         this.requiresImport("package:json_annotation/json_annotation.dart");
-        this.requiresImport2(`part '${clazz.name.toLowerCase()}.g.dart';`);
+        this.requiresImport2(`part '${clazz.name.replace(/\.?([A-Z])/g, function (x,y){return "_" + y.toLowerCase()}).replace(/^_/, "")}.g.dart';`);
         this.requiresImport2("@JsonSerializable()");
         
         const method = `factory ${clazz.name}.fromJson(Map<String, dynamic> json) => _$${clazz.name}FromJson(json);`;
